@@ -1,4 +1,10 @@
-
+resource "random_string" "azurerm_apim_name" {
+  length  = 5
+  lower   = true
+  numeric = false
+  special = false
+  upper   = false
+}
 
 resource "azurerm_resource_group" "apim" {
   location = local.location
@@ -11,7 +17,7 @@ output "test" {
   value       = lookup(module.vnet_ai.vnet_subnets_name_id, "snet_web")
 }
 resource "azurerm_api_management" "example" {
-  name                = "apim-ai-services"
+  name                = "apim-openai-services-${random_string.azurerm_apim_name.result}"
   location            = local.location
   resource_group_name = azurerm_resource_group.apim.name
   publisher_name      = "My Company"
@@ -29,19 +35,29 @@ resource "azurerm_api_management" "example" {
     type = "SystemAssigned"
   }
 
-  policy {
-    xml_content = <<XML
-    <policies>
-      <inbound />
-      <backend />
-      <outbound />
-      <on-error />
-    </policies>
-XML
-
-  }
   depends_on = [module.vnet_ai, azurerm_route_table.rt_web]
 }
+
+resource "azurerm_log_analytics_workspace" "apim-law" {
+  name                = "logs-apim"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.apim.name
+}
+
+resource "azurerm_monitor_diagnostic_setting" "apim-diag" {
+  name               = "apim-diag"
+  target_resource_id = azurerm_api_management.example.id 
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.apim-law.id 
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
+
 
 # Create DNS Zone and register it
 
@@ -75,7 +91,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "dns_zone_link_hub" {
 
 
 resource "azurerm_private_dns_a_record" "private_dns_a_record" {
-  name                = "apim-ai-services"
+  name                = "apim-openai-services-${random_string.azurerm_apim_name.result}"
   zone_name           = azurerm_private_dns_zone.private_dns_zone.name
   resource_group_name = azurerm_resource_group.apim.name
   ttl                 = 300

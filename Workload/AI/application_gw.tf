@@ -6,6 +6,12 @@ resource "azurerm_public_ip" "example" {
   sku                 = "Standard"
 }
 
+resource "azurerm_log_analytics_workspace" "appgw-law" {
+  name                = "logs-appgw"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.apim.name
+}
+
 resource "azurerm_application_gateway" "appgateway" {
   name                = "apgw-ai-services"
   resource_group_name = azurerm_resource_group.apim.name
@@ -70,7 +76,7 @@ resource "azurerm_application_gateway" "appgateway" {
   probe {
     name                = "http_probe_test"
     host                = trimsuffix(azurerm_private_dns_a_record.private_dns_a_record.fqdn, ".")
-    path                = "/test"
+    path                = "/status-0123456789abcdef"
     protocol            = "Http"
     interval            = 60
     timeout             = 15
@@ -80,5 +86,19 @@ resource "azurerm_application_gateway" "appgateway" {
       status_code = ["100-999"]
       body        = ""
     }
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "appgw-diag" {
+  name               = "appgw-diag"
+  target_resource_id = azurerm_application_gateway.appgateway.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.appgw-law.id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
   }
 }

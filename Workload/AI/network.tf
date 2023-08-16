@@ -20,6 +20,52 @@ resource "azurerm_route_table" "spoke_to_hub" {
 
 }
 
+#AppGW NSG
+
+resource "azurerm_network_security_group" "subnet_agw_nsg" {
+  name                = "nsg-agw"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.apim.name
+}
+
+resource "azurerm_subnet_network_security_group_association" "subnet_nsg_agw_assoc" {
+  subnet_id                 = lookup(module.vnet_ai.vnet_subnets_name_id, "snet_ag")
+  network_security_group_id = azurerm_network_security_group.subnet_agw_nsg.id
+}
+
+# Rule 1: Inbound TCP rule for Client communication to AppGW Management
+resource "azurerm_network_security_rule" "rule_agw_stv1" {
+  name                        = "rule-stv1"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_ranges     = ["65200-65535"]
+  source_address_prefix       = "GatewayManager"
+  destination_address_prefix  = "*"
+  description                 = "Client communication to AppGw Management"
+  resource_group_name         = azurerm_resource_group.apim.name
+  network_security_group_name = azurerm_network_security_group.subnet_agw_nsg.name
+}
+
+
+# Rule 2: Inbound TCP rule for Internet Client communication to AppGW 
+resource "azurerm_network_security_rule" "rule_agw_stv2" {
+  name                        = "rule-stv2"
+  priority                    = 110
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_ranges     = ["80","443"]
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  description                 = "Internet Client communication AppGw"
+  resource_group_name         = azurerm_resource_group.apim.name
+  network_security_group_name = azurerm_network_security_group.subnet_agw_nsg.name
+}
+
 #apim NSG
 
 resource "azurerm_network_security_group" "subnet_nsg" {

@@ -3,8 +3,16 @@ resource "azurerm_resource_group" "cosmosdb" {
   location = local.location
 }
 
+resource "random_string" "azurerm_cosmosdb_account_name" {
+  length  = 5
+  lower   = true
+  numeric = false
+  special = false
+  upper   = false
+}
+
 resource "azurerm_cosmosdb_account" "example" {
-  name                      = "cosmosdb-azure-chatgpt"
+  name                      = "cosmosdb-chatgpt-${random_string.azurerm_cosmosdb_account_name.result}"
   location                  =local.location
   resource_group_name       = azurerm_resource_group.cosmosdb.name
   offer_type                = "Standard"

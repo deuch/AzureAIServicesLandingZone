@@ -25,7 +25,7 @@ data "azurerm_subnet" "Bastion_subnet" {
   name                 = "AzureBastionSubnet"
   virtual_network_name = values(values(module.enterprise_scale.azurerm_virtual_network)[0])[0].name
   resource_group_name  = values(values(module.enterprise_scale.azurerm_firewall)[0])[0].resource_group_name
-
+  depends_on=[module.enterprise_scale]
 }
 
 

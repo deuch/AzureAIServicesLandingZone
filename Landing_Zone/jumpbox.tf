@@ -27,5 +27,5 @@ module "virtual-machine" {
   # Remove this NSG rules block, if `existing_network_security_group_id` is specified
   nsg_inbound_rules = [
   ]
-
+  depends_on=[module.enterprise_scale]
 }

@@ -176,8 +176,17 @@ resource "azurerm_app_service_plan" "main" {
 #---------------------------------------------------------
 # App Service Definitions  - Default is "true"
 #----------------------------------------------------------
+
+resource "random_string" "azurerm_appservice_name" {
+  length  = 5
+  lower   = true
+  numeric = false
+  special = false
+  upper   = false
+}
+
 resource "azurerm_app_service" "main" {
-  name                    = lower(format("app-%s", var.app_service_name))
+  name                    = lower(format("app-%s-${random_string.azurerm_appservice_name.result}", var.app_service_name))
   resource_group_name     = local.resource_group_name
   location                = local.location
   app_service_plan_id     = azurerm_app_service_plan.main.id
