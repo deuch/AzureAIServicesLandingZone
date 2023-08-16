@@ -2,7 +2,7 @@
 locals {
   location                  = "westeurope"
   environment               = "dev"
-  connectivity_subscription = "c07b4d90-1ac5-4b47-97d0-0c5bbac825d9"
+  connectivity_subscription = "8dfc81b4-9732-4b10-88ad-07cf9a644863"
 
   configure_connectivity_resources = {
     settings = {
